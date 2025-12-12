@@ -152,28 +152,23 @@ class Auto_End_ACF_Listings {
 		wp_clear_scheduled_hook( self::CRON_HOOK );
 
 		if ( ! empty( $value ) ) {
-			// Calculate timestamp for the next occurrence of this time
-            // We use 'current_time' timestamp to get local WP time, then calculate offset
-            $timezone_string = get_option( 'timezone_string' );
-            if ( ! $timezone_string ) {
-                // Fallback for manual offset
-                $offset = get_option( 'gmt_offset' );
-                $timezone_string = timezone_name_from_abbr( '', $offset * 3600, false );
-            }
+            // Use WordPress Timezone settings to ensure accuracy
+            $timezone = wp_timezone();
             
-            // If we still can't find a timezone, default to UTC to be safe, but typically WP handles this.
-            // Let's rely on strtotime with today's date + time string relative to WP logic.
-            
-            // Easiest robust way: Combine today's date with the time, check if it's passed.
-            $today_str = current_time( 'Y-m-d' );
-            $target_timestamp = strtotime( "$today_str $value" );
-
-            // If the time has already passed today, schedule for tomorrow
-            if ( $target_timestamp < current_time( 'timestamp' ) ) {
-                $target_timestamp += DAY_IN_SECONDS;
+            // Create a DateTime object for "Today" at the specified time in the Site's Timezone
+            $date = new DateTime( 'now', $timezone );
+            $time_parts = explode( ':', $value );
+            if ( count( $time_parts ) === 2 ) {
+                $date->setTime( (int) $time_parts[0], (int) $time_parts[1], 0 );
             }
 
-			wp_schedule_event( $target_timestamp, 'daily', self::CRON_HOOK );
+            // If this time has already passed properly in UTC, schedule for tomorrow
+            if ( $date->getTimestamp() <= time() ) {
+                $date->modify( '+1 day' );
+            }
+
+			// wp_schedule_event expects a UTC timestamp
+			wp_schedule_event( $date->getTimestamp(), 'daily', self::CRON_HOOK );
 		}
 	}
 
