@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Automatic End for ACF Listings
- * Description: Automatically updates listing status from 'active' to 'ended' based on the ACF Auction Start Date.
+ * Description: Automatically updates listing status from 'active' to 'sold' based on the ACF Auction Start Date.
  * Version: 1.0.0
  * Author: John Lim
  * Text Domain: auto-end-acf-listings
@@ -208,10 +208,10 @@ class Auto_End_ACF_Listings {
 			foreach ( $query->posts as $post_id ) {
 				// Remove 'active'
 				wp_remove_object_terms( $post_id, 'active', 'listing-status' );
-				// Add 'ended'
-				wp_set_object_terms( $post_id, 'ended', 'listing-status', true );
+				// Add 'sold'
+				wp_set_object_terms( $post_id, 'sold', 'listing-status', true );
                 
-                error_log( "AEAL: Updated Post ID $post_id to 'ended'." );
+                error_log( "AEAL: Updated Post ID $post_id to 'sold'." );
 			}
 		}
         
